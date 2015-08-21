@@ -207,6 +207,25 @@ bantime  = 600
 port     = 22
 '''
 
+# https://wiki.archlinux.org/index.php/Jumbo_frames#Systemd_unit
+ETC_SYSTEM_D_SET_MTU = '''
+[Unit]
+Description=Set mtu on device
+Before=network.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/conf.d/setmtu
+ExecStart=/usr/bin/ip link set dev %i up mtu ${%i}
+
+[Install]
+WantedBy=multi-user.target
+'''
+
+ETC_CONF_D_SET_MTU = '''
+eth0=1460
+'''
+
 GCIMAGEBUNDLE_ARCH_PY = '''
 # Copyright 2014 Google Inc. All Rights Reserved.
 #
@@ -373,6 +392,12 @@ def SetupNetwork():
   utils.EnableService('dhcpcd.service')
   utils.EnableService('systemd-networkd.service')
   utils.EnableService('systemd-networkd-wait-online.service')
+  # Set Google Compute specific MTU
+  # https://cloud.google.com/compute/docs/troubleshooting#packetfragmentation
+  utils.WriteFile('/etc/systemd/system/setmtu@.service', ETC_SYSTEM_D_SET_MTU)
+  utils.CreateDirectory('/etc/conf.d/')
+  utils.WriteFile('/etc/conf.d/setmtu', ETC_CONF_D_SET_MTU)
+  utils.EnableService('setmtu@eth0.service')
 
 
 def SetupSsh():
