@@ -45,7 +45,7 @@ sudo yum install -y python3 haveged
 gsutil cp archlinux-gce.tar.gz gs://${BUCKET}/archlinux.tar.gz
 
 # Add image to project
-gcloud compute images insert archlinux \
+gcloud compute images create archlinux \
   --source-uri gs://${BUCKET}/archlinux.tar.gz \
   --description "Arch Linux for Compute Engine"
 ```
